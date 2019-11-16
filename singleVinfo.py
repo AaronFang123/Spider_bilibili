@@ -65,8 +65,6 @@ def __video_info_1(content, aid):
 
     # for k, v in translate.items():
     #     infostr = infostr + k + ':' + str(v) + '\n'
-    # TODO debug
-    print translate
     return translate
 
 

@@ -40,8 +40,7 @@ def get_aid_list_and_length(Uid):
             for vinfo_single_page in vinfo_pages:
                 id_list.append(vinfo_single_page['aid'])
                 lendict[vinfo_single_page['aid']] = vinfo_single_page['length']
-    # TODO debug
-    print lendict
+
     return id_list, lendict
 
 
@@ -49,8 +48,6 @@ def get_main_info(aidlist, vname, lengthdict):
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
     main_info_list = pool.map(singleVinfo.user_info, aidlist)
     pool.terminate()
-    # TODO debug
-    print main_info_list
     for dict1 in main_info_list:
         dict1[u'视频长度'] = lengthdict[dict1[u'AV号'.encode('utf8')]]
 

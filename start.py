@@ -4,6 +4,7 @@ import sys
 import userid
 import vcomment
 import visualization
+import userinfo
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -14,6 +15,7 @@ def main():
     up_name_to_define = raw_input('input the keyword(up name):').decode(sysencoding).encode(sysencoding)
     uid, name = userid.search_ID(up_name_to_define)
     aid_list, length_dict = vinfo.get_aid_list_and_length(uid)
+    userinfo.get_user_info(aid_list, name)
     vinfo.get_main_info(aid_list, name, length_dict)
 
     all_comments = vcomment.get_comments_mutiprocess(aid_list)
