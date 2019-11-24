@@ -18,7 +18,7 @@ def user_info(aid):
     print 'Video Information: {}'.format(aid)
     url = 'https://api.bilibili.com/x/web-interface/view?aid={}'.format(aid)
     # sleep
-    a = random.uniform(3, 4)
+    a = random.uniform(1.5, 2.5)
     random_num = round(a, 3)
     time.sleep(random_num)
     try:

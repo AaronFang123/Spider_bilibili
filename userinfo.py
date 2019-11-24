@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*
 import codecs
 import os
-import random
-import time
 import requests
 import sys
 import json
@@ -14,11 +12,11 @@ sys.setdefaultencoding('utf-8')
 sysencoding = sys.getfilesystemencoding()
 
 
-def get_user_info(aidlist, name):
+def get_user_info(uid, name):
     ua = UserAgent()
     headers = {'User-Agent': ua.random}
     print 'User Information: {}'.format(name)
-    url = 'https://api.bilibili.com/x/web-interface/view/detail?aid={}'.format(aidlist[0])
+    url = 'https://api.bilibili.com/x/web-interface/card?mid={}'.format(uid)
     try:
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code == 200:
@@ -31,7 +29,7 @@ def get_user_info(aidlist, name):
 def __video_info_1(content, name):
     obj = json.loads(content)
 
-    infodict = jsonpath.jsonpath(obj, '$..data')[0]['Card']
+    infodict = jsonpath.jsonpath(obj, '$..data')[0]
     translate = {
                  u'文章数'.encode('utf8'): infodict['article_count'],
                  u'生日'.encode('utf8'): infodict['card']['birthday'],

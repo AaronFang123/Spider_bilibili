@@ -30,7 +30,7 @@ def __get_all_comments_in_a_video(aid):
             html = requests.get(url_json, headers=headers).content
 
             # sleep
-            a = random.uniform(2.01, 3)
+            a = random.uniform(1.5, 2.5)
             random_num = round(a, 3)
             time.sleep(random_num)
 

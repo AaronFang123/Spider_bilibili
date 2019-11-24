@@ -27,3 +27,25 @@ def comments_worldcloud(name):
     word_cloud.to_file(unicode('wordcloud/{}-comments-wordcloud.jpg'.format(name)))
     time.sleep(5)
     sys.exit()
+
+
+def countwords(name):
+    with codecs.open(unicode(r'Detail_video_comments_result/{}.txt').format(name), 'r', encoding='utf-16') as f:
+        f = f.read()
+    words = jieba.lcut(f)
+    counts = {}
+    for word in words:
+        if len(word) == 1:
+            continue
+        else:
+            counts[word] = counts.get(word, 0) + 1
+    item = list(counts.items())
+    item.sort(key=lambda x: x[1], reverse=True)
+    for i in range(20):
+        word, count = item[i]
+        print "{} : {}".format(word.encode("utf8"), count)
+    return item
+
+
+if __name__ == '__main__':
+    countwords("哔哩哔哩弹幕网".decode("utf8"))
