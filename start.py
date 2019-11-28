@@ -18,11 +18,12 @@ def main():
     userinfo.get_user_info(uid, name)
     vinfo.get_main_info(aid_list, name, length_dict)
 
-    all_comments = vcomment.get_comments_mutiprocess(aid_list)
+    all_comments, comments_count = vcomment.get_comments_mutiprocess(aid_list)
     vcomment.save_comments_result(all_comments, name)
 
+    top_10_words = analyseData.countwords(name)
+    print top_10_words
     analyseData.comments_worldcloud(name)
-    analyseData.countwords(name)
 
 
 if __name__ == '__main__':

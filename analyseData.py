@@ -35,16 +35,37 @@ def countwords(name):
     words = jieba.lcut(f)
     counts = {}
     for word in words:
-        if len(word) == 1:
+        if len(word) == 1 or word == 'EOC' or not is_all_zh(word):
             continue
         else:
             counts[word] = counts.get(word, 0) + 1
     item = list(counts.items())
     item.sort(key=lambda x: x[1], reverse=True)
-    for i in range(20):
-        word, count = item[i]
-        print "{} : {}".format(word.encode("utf8"), count)
-    return item
+
+    if len(item) == 0:
+        empty_list = []
+        return empty_list
+
+    if len(item) >= 20:
+        for i in range(20):
+            word, count = item[i]
+            print "{} : {}".format(word.encode("utf8"), count)
+        return item[0:19]
+
+    else:
+        count_top = len(item)
+        for i in range(count_top):
+            word, count = item[i]
+            print "{} : {}".format(word.encode("utf8"), count)
+        return item[0:count_top-1]
+
+
+
+def is_all_zh(string):
+    for ch in string:
+        if not (ur'\u4e00' <= ch <= ur'\u9fa5'):
+            return False
+    return True
 
 
 if __name__ == '__main__':
