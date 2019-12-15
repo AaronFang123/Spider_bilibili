@@ -33,14 +33,20 @@ def get_aid_list_and_length(Uid):
     lendict = {}
     for i in range(1, last_page + 1):
         url_json = 'https://space.bilibili.com/ajax/member/getSubmitVideos?mid=' + str(Uid) + '&page=' + str(i)
-        html = requests.get(url_json, headers=headers).content
-        obj = json.loads(html)
-        vlist = jsonpath.jsonpath(obj, '$..vlist')
-        for vinfo_pages in vlist:
-            for vinfo_single_page in vinfo_pages:
-                id_list.append(vinfo_single_page['aid'])
-                lendict[vinfo_single_page['aid']] = vinfo_single_page['length']
+        try:
+            html = requests.get(url_json, headers=headers).content
+            obj = json.loads(html)
+            vlist = jsonpath.jsonpath(obj, '$..vlist')
 
+            for vinfo_pages in vlist:
+                for vinfo_single_page in vinfo_pages:
+                    id_list.append(vinfo_single_page['aid'])
+                    lendict[vinfo_single_page['aid']] = vinfo_single_page['length']
+        except TypeError as e:
+            print e.message
+            id_list_exception = []
+            lendict_exception = []
+            return id_list_exception, lendict_exception
     return id_list, lendict
 
 
@@ -64,3 +70,6 @@ def get_main_info(aidlist, vname, lengthdict):
     with codecs.open(unicode(r'Video_information/{}.txt').format(vname), 'w', encoding='utf-16') as f:
         f.write(video_info_string2)
 
+
+if __name__ == '__main__':
+    print get_aid_list_and_length(18684696)

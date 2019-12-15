@@ -62,7 +62,7 @@ def save_comments_result(string, name):
 
 
 def get_comments_mutiprocess(aidlist):
-    pool = multiprocessing.Pool(8)  # multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(10)  # multiprocessing.cpu_count()
     all_comments_list = pool.map(__get_all_comments_in_a_video, aidlist)
     pool.terminate()
     s = ''

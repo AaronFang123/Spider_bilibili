@@ -6,6 +6,7 @@ import vcomment
 import analyseData
 import getinfo_wide
 import requests
+import time
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -14,21 +15,26 @@ sysencoding = sys.getfilesystemencoding()
 APP_ID = 'wx51e9d5f55f550a61'  # 小程序id
 APP_SECRET = '8e133e4607d13f5bb5e8d6bb5ed4fc98'  # 小程序独有的一个标志，可以在平台重置
 ENV = 'microbiilii-fg40e'  # 云开发环境id
-Collection_name = "User_info_test"  # 将要插入到的集合名
+Collection_name = "User_info"  # 将要插入到的集合名
 HEADER = {'content-type': 'application/json'}
 WECHAT_URL = "https://api.weixin.qq.com/"
+ACCESS_TOKEN = ""
+ACCESS_TOKENZ_LOAD = 0
+UPDATED_COUNT = 5971
 
 
 def get_access_token():
+    global ACCESS_TOKEN, ACCESS_TOKENZ_LOAD
     url = '{0}cgi-bin/token?grant_type=client_credential&appid={1}&secret={2}'.format(WECHAT_URL, APP_ID, APP_SECRET)
     response = requests.get(url)
     result = response.json()
-    return result['access_token']
+    ACCESS_TOKENZ_LOAD += 1
+    ACCESS_TOKEN = result['access_token']
 
 
-def database_save(mid, accessToken_n):
-
-    url = '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, accessToken_n)
+def database_save(mid):
+    global UPDATED_COUNT
+    url = '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN)
     print 'Saving data...'
     print '-----------------------------------------------------------------------------'
     print 'Saving data...'
@@ -36,7 +42,7 @@ def database_save(mid, accessToken_n):
     userstr, userdict = getinfo_wide.get_user_info(mid)
     print userstr
     article_count = userdict[u'文章数'.decode('utf8')]
-    name = userdict[u'昵称'.decode('utf8')].replace(' ', '_')
+    name = userdict[u'昵称'.decode('utf8')].replace(' ', '_').replace('/', '_')
     face = userdict[u'头像'.decode('utf8')]
     archive_count = userdict[u'投稿总数'.decode('utf8')]
     fans = userdict[u'粉丝数'.decode('utf8')]
@@ -50,6 +56,11 @@ def database_save(mid, accessToken_n):
     sex = userdict[u'性别'.decode('utf8')]
 
     aid_list, length_dict = vinfo.get_aid_list_and_length(mid)
+
+    if len(aid_list) >= 30:
+        aid_list = aid_list[0:29]
+    elif len(aid_list) == 0:
+        return
     all_comments, comments_count = vcomment.get_comments_mutiprocess(aid_list)
     vcomment.save_comments_result(all_comments, name)
     top_10_words = analyseData.countwords(name)
@@ -59,7 +70,7 @@ def database_save(mid, accessToken_n):
     formatted_top_10 += '}'
     # add
     query = ""
-    if url == '{0}tcb/databaseadd?access_token={1}'.format(WECHAT_URL, accessToken_n):
+    if url == '{0}tcb/databaseadd?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN):
         query = "db.collection(\"{0}\").add(" \
                 "{{data:{{" \
                 "_id: \'{1}\', " \
@@ -84,7 +95,7 @@ def database_save(mid, accessToken_n):
                     desc, sign, vipStatus, follower, sex, 'true', formatted_top_10, comments_count)
 
     # update
-    elif url == '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, accessToken_n):
+    elif url == '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN):
         query = "db.collection(\"{0}\").doc(\"{1}\").update(" \
                 "{{data:{{" \
                 "article_count: \'{2}\', " \
@@ -106,33 +117,67 @@ def database_save(mid, accessToken_n):
                 "}}}})" \
             .format(Collection_name, name, article_count, face, archive_count, fans, friend, current_level, mid,
                     name, desc, sign, vipStatus, follower, sex, 'true', formatted_top_10, comments_count)
+    print query
     data = {
         "env": ENV,
         "query": query
     }
     response = requests.post(url, data=json.dumps(data), headers=HEADER)
     print response.text
-    update_errorCatch(response.text, data)
+    update_errorCatch(response.text, data, name)
 
     print '-----------------------------------------------------------------------------'
+    print "access token load times  {}".format(ACCESS_TOKENZ_LOAD)
     print 'Saved!'
+    UPDATED_COUNT += 1
 
 
-def update_errorCatch(text, data):
-    errcode = json.loads(text)["errcode"]
+def update_errorCatch(text, data,  name):
+    coun = 0
+    try:
+        errcode = json.loads(text)["errcode"]
+    except ValueError as ve:
+        print ve.message
+        return
     if errcode == 0:
         return
-    while errcode != 0:
-        print "load again"
-        accessToken_n = get_access_token()
-        url = '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, accessToken_n)
-        response = requests.post(url, data=json.dumps(data), headers=HEADER)
+    elif errcode == 45009:
+        raise Exception  # 到次数了
+    elif errcode == -605101:
+        url = '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN)
+        query = "db.collection(\"{0}\").doc(\"{1}\").update(" \
+                "{{data:{{" \
+                "is_updated: \'{2}\'," \
+                "}}}})" \
+            .format(Collection_name, name, 'false',)
+        data_inside = {
+            "env": ENV,
+            "query": query
+        }
+        response = requests.post(url, data=json.dumps(data_inside), headers=HEADER)
+        print 'Query false'
         print response.text
+        return
+
+    else:
+        while True:
+            if coun >= 3:
+                break
+            coun += 1
+            print "load again"
+            get_access_token()
+            url = '{0}tcb/databaseupdate?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN)
+            response_inside = requests.post(url, data=json.dumps(data), headers=HEADER)
+            errcode_inside = json.loads(response_inside.text)["errcode"]
+            print response_inside.text
+            if errcode_inside == 0:
+                break
+            time.sleep(5)
 
 
-def pushed_count(accessToken_n):
-    url = '{0}tcb/databasecount?access_token={1}'.format(WECHAT_URL, accessToken_n)
-    query = "db.collection(\"{0}\").where({1}).count()".format(Collection_name, "{is_updated:\"true\"}")
+def pushed_count():
+    url = '{0}tcb/databasecount?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN)
+    query = "db.collection(\"{0}\").where({1}).count()".format(Collection_name, "{updated:true}")
     print query
     data = {
         "env": ENV,
@@ -141,17 +186,32 @@ def pushed_count(accessToken_n):
     response = requests.post(url, data=json.dumps(data), headers=HEADER)
     print response.text
     con = json.loads(response.content)
-    process_num = int(con['count'])
-    print process_num
-    return process_num
+    pushed_num = int(con['count'])
+
+    url = '{0}tcb/databasecount?access_token={1}'.format(WECHAT_URL, ACCESS_TOKEN)
+    query = "db.collection(\"{0}\").where({1}).count()".format(Collection_name, "{is_updated:\"false\"}")
+    print query
+    data = {
+        "env": ENV,
+        "query": query
+    }
+    response = requests.post(url, data=json.dumps(data), headers=HEADER)
+    print response.text
+    con = json.loads(response.content)
+    unpushed_num = int(con['count'])
+    print "***********************************************************"
+    print "updated : {} , updated false : {}".format(pushed_num, unpushed_num)
+    print "***********************************************************"
+
+    return 62179 + unpushed_num + pushed_num
 
 
 if __name__ == '__main__':
-    accessToken = get_access_token()
-    c = pushed_count(accessToken)
-    print "updated {}".format(c)
-    uidlist = getinfo_wide.readinfo("uidtest.txt")
+    get_access_token()
+    c = pushed_count()
+    uidlist = getinfo_wide.readinfo("all_uid_list.txt")
     uidlist = uidlist[c:]
     for uid in uidlist:
+        print "updated {}".format(c)
         getinfo_wide.sleep()
-        database_save(uid, accessToken)
+        database_save(uid)

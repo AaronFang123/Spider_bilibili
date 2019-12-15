@@ -60,7 +60,6 @@ def countwords(name):
         return item[0:count_top-1]
 
 
-
 def is_all_zh(string):
     for ch in string:
         if not (ur'\u4e00' <= ch <= ur'\u9fa5'):
