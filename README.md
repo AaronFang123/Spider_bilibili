@@ -1,2 +1,8 @@
-# Spider_bilibili
-Get personal information of specific users on Bilibili, all video information, video comment information and visual processing through crawler
+# Bilibili爬虫
+
+通过用户网对抓取了约20w的用户作为样本，爬取这些用户的所有投稿信息。
+用户列表在all_uid_list.txt中
+
+## 仅为个人学习所用！
+
+
