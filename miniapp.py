@@ -12,9 +12,9 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 sysencoding = sys.getfilesystemencoding()
 
-APP_ID = 'wx51e9d5f55f550a61'  # 小程序id
-APP_SECRET = '8e133e4607d13f5bb5e8d6bb5ed4fc98'  # 小程序独有的一个标志，可以在平台重置
-ENV = 'microbiilii-fg40e'  # 云开发环境id
+APP_ID = # 小程序id
+APP_SECRET =  # 小程序独有的一个标志，可以在平台重置
+ENV = # 云开发环境id
 Collection_name = "User_info"  # 将要插入到的集合名
 HEADER = {'content-type': 'application/json'}
 WECHAT_URL = "https://api.weixin.qq.com/"
